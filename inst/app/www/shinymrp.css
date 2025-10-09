@@ -1,0 +1,272 @@
+  a {
+    display: inline;
+    word-break: break-all;
+  }
+
+  code {
+    display: inline;
+  }
+
+  p {
+    /* text-align: justify; */
+    line-height: 2em;
+  }
+  
+  ul {
+    line-height: 2em;
+  }
+
+  text {
+    font-family: helvetica,arial,sans-serif;
+  }
+
+  .formula {
+    margin-top: 15px;
+  }
+
+  .header_top {
+    border: 1px solid #000000;
+    padding-bottom: 0px;
+    margin-bottom: 20px;
+  }
+
+  .header_bottom {
+    border: 1px solid #000000;
+    padding-top: 0px;
+    margin-top: 20px;
+  }
+
+  .break_line {
+    border: 1px solid #000000;
+    padding-top: 0px;
+    margin-top: 0px;
+  }
+
+  .break_title {
+    margin-top: 30px;
+    margin-bottom: 5px;
+  }
+
+  .landing_container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    width: 60%;
+  }
+
+  .landing_header {
+    text-align: center;
+    font-size: 12em;
+    font-weight: lighter;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    padding-top: 90px;
+  }
+
+  .landing_subheader {
+    font-size: 1.7em;
+    font-style: italic;
+    text-align: center;
+    padding-bottom: 30px;
+  }
+
+  .landing_text {
+    font-size: 1.2em;
+    line-height: 2;
+  }
+
+  .action_link {
+    word-break: normal;
+  }
+
+  .landing_panels {
+    width: 100%;
+  }
+
+  .landing_panel {
+    width: 49%;
+    height: inherit;
+    margin: 0;
+  }
+
+  .landing_panel_heading {
+    text-align: center;
+    font-size: 1.7em;
+  }
+
+  .landing_panel_body p {
+    margin: 12px 3px 10px 8px;
+    font-size: 1.3em;
+  }
+
+  .landing_panel_body button {
+    width: 100%;
+    margin-top: 5%;
+    font-size: 1.3em;
+  }
+
+  .interface_buttons {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 40px;
+  }
+  
+  .interface_buttons a {
+    margin-right: 1em;
+  }
+
+
+  .model_spec_buttons {
+    width: 25%;
+  }
+
+  .model_spec_buttons button {
+    padding: 3px 5px 1px 5px;
+    width: 45%;
+  }
+
+  .model_tab_header button {
+    color: grey;
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 2px 4px 0px 4px;
+  }
+
+  .justify {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .inline {
+    display: inline;
+  }
+
+  .footnote_container {
+    position: fixed;
+    top: 96%;
+    left: 94%;
+    z-index: 1001;
+    width: 5.8%;
+  }
+
+  .footnote {
+    float: right;
+  }
+  
+  .help_btn_container {
+    position: fixed;
+    top: 93.5%;
+    left: 96.5%;
+    z-index: 1002;
+  }
+
+  
+  .guide_section_body * {
+    margin: 5px 15px 5px 15px; 
+  }
+  
+  .custom_label {
+    font-weight: bolder;
+    font-size: 1em;
+    margin-bottom: 2px;
+  }
+  
+  .alert {
+    background-color: red;
+  }
+  
+  .success {
+    background-color: #00b1fc;
+  }
+
+  .success:hover {
+      background-color: #008ecf; /* Darker shade for hover */
+  }
+
+  .success:active {
+      background-color: #006fa1; /* Even darker shade for clicked state */
+  }
+
+  .success:disabled {
+      background-color: #c4e4f8; /* Light shade for disabled state */
+      color: #a0a0a0;            /* Gray text to indicate disabled */
+      cursor: not-allowed;       /* Change cursor to indicate non-interactive */
+      opacity: 0.6;              /* Reduced opacity for visual cue */
+  }
+
+  .alt_text {
+    font-size: 1.25em;
+    font-style: italic;
+    text-align: center;
+    display: block;  /* Ensures center alignment works */
+    margin: 1.25em auto;  /* Adds some vertical spacing */
+  }
+
+  /* ANIMATION EFFECTS */
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .flicker {
+    animation: flicker 0.5s infinite;
+  }
+  
+  @keyframes vibrate {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-3px); }
+    100% { transform: translateX(0); }
+  }
+  .vibrate {
+    animation: vibrate 0.4s ease-in-out;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotateY(0deg); }
+    25% { transform: rotateY(90deg); }
+    50% { transform: rotateY(180deg); }
+    75% { transform: rotateY(270deg); }
+    100% { transform: rotateY(360deg); }
+  }
+  .spin {
+    animation: spin 0.5s infinite;  /* 1-second spin */
+  }
+
+  /* NAVIGATION BAR */
+  .nav-item a {
+    background: none;
+    border: none;
+  }
+
+  /* SLIDER STYLES */
+  /* main label above the slider */
+  #my_date_label,  /* or use .control-label for all sliders */
+  label[for='my_date'] {
+    font-size: 14px !important;
+  }
+
+  /* the grid / tick labels under the slider track */
+  .js-irs-0 .irs-grid-text {
+    font-size: 13px !important;
+  }
+
+  /* the min / max labels at ends */
+  .js-irs-0 .irs-min, 
+  .js-irs-0 .irs-max {
+    font-size: 13px !important;
+  }
+
+  /* the popup single‐value tooltip */
+  .js-irs-0 .irs-single {
+    font-size: 14px !important;
+  }
+  
+  .nav-brand {
+    font-size: 1.5em !important;
+  }
+  
+  
+  
+  

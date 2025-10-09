@@ -1,0 +1,42 @@
+#' est_plot UI Function
+#'
+#' @description A shiny Module.
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#'
+#' @noRd
+#' @keywords internal 
+mod_est_plot_ui <- function(id) {
+  ns <- NS(id)
+  plotOutput(outputId = ns("plot"))
+}
+    
+#' est_plot Server Functions
+#'
+#' @noRd
+#' @keywords internal
+mod_est_plot_server <- function(id, workflow, model, var) {
+  moduleServer(id, function(input, output, session){
+    ns <- session$ns
+
+    output$plot <- renderPlot({
+      req(model())
+
+      workflow()$estimate_plot(model(), var)
+
+    }, height = function() {
+      req(model())
+      
+      .plot_height(
+        n = length(model()$mrp_data()$levels[[var]]) + 1,
+        is_timevar = model()$metadata()$is_timevar
+      )
+    })
+  })
+}
+    
+## To be copied in the UI
+# mod_est_plot_ui("est_plot_1")
+    
+## To be copied in the server
+# mod_est_plot_server("est_plot_1")

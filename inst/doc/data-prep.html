@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>More on data preparation</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">More on data preparation</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(shinymrp)</span></code></pre></div>
+<p>This vignette details the data requirements, implementation steps,
+and relevant code references for data preparation in
+<strong>shinymrp</strong>.</p>
+<p>MRP requires two main data components: the survey or test data and a
+corresponding poststratification table. The workflow involves two
+stages:</p>
+<ul>
+<li><strong>Multilevel regression (MR):</strong> Modeling the
+relationship between the outcome and demographic/geographic predictors,
+optionally incorporating area-level covariates;</li>
+<li><strong>Poststratification (P):</strong> Aggregating estimates
+according to the population structure of the target.</li>
+</ul>
+<div id="data-requirements" class="section level2">
+<h2>Data requirements</h2>
+<div id="individual-level-vs.-aggregated-data" class="section level3">
+<h3>Individual-level vs. aggregated data</h3>
+<p>Data preprocessing accepts either of these formats:</p>
+<ul>
+<li><strong>Individual-level:</strong> Each row contains data for a
+single person.</li>
+<li><strong>Aggregated:</strong> Each row contains data for a group
+(e.g., White males aged 18-30 in Michigan), summarizing
+demographic/geographic factors, totals, and outcome summaries.</li>
+</ul>
+<p>For <strong>continuous outcomes</strong>, only individual-level data
+are supported.<br />
+For <strong>binary outcomes</strong>, the aggregated format is preferred
+for computational efficiency; individual-level data are aggregated
+automatically upon upload. Other data requirements depend on format,
+primarily regarding outcome measures.</p>
+</div>
+<div id="required-columns-and-naming-conventions" class="section level3">
+<h3>Required columns and naming conventions</h3>
+<p>The code expects columns with specific names and values (not
+case-sensitive):</p>
+<ul>
+<li>Sex: male, female</li>
+<li>Race: Black, White, other</li>
+<li>Age</li>
+<li>Edu (education attainment): below high school (no hs), high school
+(hs), some college, 4-year college, post-grad</li>
+<li>ZIP code <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></li>
+<li>County <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></li>
+<li>State <a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></li>
+<li>Time indices (time) <a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a></li>
+<li>Date</li>
+<li>Continuous outcome measure (outcome) <a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></li>
+<li>Positive response indicator or number of positive responses
+(positive) <a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a></li>
+<li>Cross-tabulation cell counts (total) <a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a></li>
+<li>Survey weights (weight) <a href="#fn8" class="footnote-ref" id="fnref8"><sup>8</sup></a></li>
+</ul>
+</div>
+<div id="data-modules" class="section level3">
+<h3>Data modules</h3>
+<p>Input data are categorized for clear requirements and implementation,
+with multiple modules. The two primary categories,
+<strong>time-varying</strong> and <strong>cross-sectional</strong>,
+support specific applications as well as general cases. The following
+cheatsheet summarizes requirements and typical preprocessing outputs for
+each.</p>
+<hr />
+<p><strong>TIME-VARYING</strong></p>
+<hr />
+<p><strong>COVID-19 Test Data</strong></p>
+<ol style="list-style-type: decimal">
+<li>Sample data</li>
+</ol>
+<ul>
+<li>Sex: male, female</li>
+<li>Race: Black, White, other</li>
+<li>Age: 0-17, 18-34, 35-64, 65-74, 75+</li>
+<li>ZIP code: each ZIP treated as distinct</li>
+<li>Time: Dates (yyyy-mm-dd) or sequential indices (starting at 1)</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Poststratification data</li>
+</ol>
+<ul>
+<li>ACS linking: sex * race * age * zip</li>
+</ul>
+<p><strong>General</strong></p>
+<ol style="list-style-type: decimal">
+<li>Sample data</li>
+</ol>
+<ul>
+<li>Sex: male, female</li>
+<li>Race: Black, White, other</li>
+<li>Age: 0-17, 18-34, 35-64, 65-74, 75+</li>
+<li>ZIP code: each ZIP treated as distinct</li>
+<li>County: five-digit FIPS codes required</li>
+<li>State: name, abbreviation, or FIPS code</li>
+<li>Time: Dates or sequential indices</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Poststratification data</li>
+</ol>
+<ul>
+<li>ACS linking: sex * race * age * (user selected geographic
+levels)</li>
+<li>User upload</li>
+</ul>
+<hr />
+<p><strong>CROSS-SECTIONAL</strong></p>
+<hr />
+<p><strong>Public Opinion Poll Data</strong></p>
+<ol style="list-style-type: decimal">
+<li>Sample data</li>
+</ol>
+<ul>
+<li>Sex: male, female</li>
+<li>Race: Black, White, other</li>
+<li>Age: 18-29, 30-39, 40-49, 50-59, 60-69, 70+</li>
+<li>Education (edu): below high school, high school, some college,
+4-year college, post-grad</li>
+<li>State: name, abbreviation, or FIPS code</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Poststratification data</li>
+</ol>
+<ul>
+<li>ACS linking: sex * race * age * edu * state</li>
+</ul>
+<p><strong>General</strong></p>
+<ol style="list-style-type: decimal">
+<li>Sample data</li>
+</ol>
+<ul>
+<li>Sex: male, female</li>
+<li>Race: Black, White, other</li>
+<li>Age: 0-17, 18-34, 35-64, 65-74, 75+</li>
+<li>ZIP code: each ZIP treated as distinct</li>
+<li>County: five-digit FIPS codes</li>
+<li>State: name, abbreviation, or FIPS code</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Poststratification data</li>
+</ol>
+<ul>
+<li>ACS linking: sex * race * age * (user selected geographic
+levels)</li>
+<li>User upload</li>
+</ul>
+</div>
+<div id="data-preprocessing-steps" class="section level3">
+<h3>Data preprocessing steps</h3>
+<p>The preprocessing pipeline includes:</p>
+<ul>
+<li><strong>Data cleaning</strong>: Standardizes column names, converts
+values to lowercase, handles missing/unknown data, and standardizes
+ZIP/FIPS codes.</li>
+<li><strong>Conversion to categorical</strong>: Recodes variables,
+applies categorization intervals, and assigns time indices to
+dates.</li>
+<li><strong>Imputation</strong>: Imputes missing entries using observed
+frequency distributions.</li>
+<li><strong>Aggregation</strong>: Aggregates individual-level data to
+produce cell counts for each combination of relevant group factors.</li>
+</ul>
+<p>Code reference: <a href="https://github.com/mrp-interface/shinymrp/blob/main/R/fct_data.R#L1211">preprocess</a>.</p>
+</div>
+<div id="geographic-identifiers-and-covariates" class="section level3">
+<h3>Geographic identifiers and covariates</h3>
+<p>A major strength of MRP is small area estimation, so it is advisable
+to include as much geographic/geo-covariate information as possible.</p>
+<p>First, the application identifies geographic units at larger scales
+that are not present in the data. It automatically determines the
+smallest geographic units in the data and infers corresponding units at
+larger scales. For example, if the data contains ZIP codes, the
+application will automatically find the county and state that has the
+largest overlap with each ZIP code.</p>
+<p>Quantitative measures associated with geographic units are sourced
+from your data or external datasets. For general use cases, the app
+scans the data to find quantities that have a one-to-one relationship
+with the geographic identifier of interest.</p>
+<p>For the COVID-19 use case, we have identified specific ZIP code-level
+measures that are informative in modeling COVID-19 test results. We
+obtain these quantities at the tract level from the ACS and other
+sources, then aggregate over the tracts that overlap with each ZIP code
+based on the USPS crosswalk table.</p>
+<p>We obtain the following tract-level measures from the ACS and other
+sources:</p>
+<ul>
+<li>Binary indicators of whether tracts are classified as urban or
+not</li>
+<li>Population counts categorized by levels of education</li>
+<li>Population counts categorized by ratios of income to poverty level
+in the past 12 months</li>
+<li>Population counts categorized by employment status</li>
+<li>Median household income in the past 12 months</li>
+<li><a href="https://www.neighborhoodatlas.medicine.wisc.edu">Area
+Deprivation Index (ADI)</a>.</li>
+</ul>
+<p>Code reference: <a href="https://github.com/mrp-interface/shinymrp/blob/main/dev/scripts/get_tract_data.R#L49">get_tract_data</a>.</p>
+<p>While the ACS reports geography at the levels of census tracts,
+counties, and states, ZIP codes are defined by the U.S. Postal Service
+(USPS). We use the ZIP code crosswalk table released by the U.S.
+Department of Housing and Urban Development and USPS to link ZIP codes
+to census tracts and calculate ZIP-code-level measures by aggregating
+all available tract-level measures weighted by tract population counts.
+ZIP code level statistics are computed by combining the values across
+census tracts as follows:</p>
+<ul>
+<li>Urbanicity of a ZIP code is defined as the percentage of covered
+census tracts classified as urban, weighted by tract population
+counts;</li>
+<li>Higher education measure of a ZIP code is defined as the percentage
+of the residing population who have earned an Associate’s degree or
+higher;</li>
+<li>Poverty measure of a ZIP code is defined as the percentage of the
+residing population whose ratio of income to poverty level in the past
+12 months is below 1;</li>
+<li>Employment rate of a ZIP code is defined as the percentage of the
+residing population who are employed as a part of the civilian labor
+force;</li>
+<li>Income measure of a ZIP code is defined as the average value of
+tract-level median household income in the past 12 months, weighted by
+tract population counts;</li>
+<li>ADI of a ZIP code is the average ADI across covered census tracts,
+weighted by tract population counts.</li>
+</ul>
+<p>Code reference: <a href="https://github.com/mrp-interface/shinymrp/blob/main/dev/scripts/create_data.R#L97">combine_tracts_covid</a>.</p>
+</div>
+<div id="poststratification-tables" class="section level3">
+<h3>Poststratification tables</h3>
+<p>Poststratification tables are computed from ACS data via the
+<code>tidycensus</code> package and IPUMS and summarize the size of
+every subpopulation defined by demographic and geographic
+cross-categories. For efficiency, tables are precomputed at the tract
+level and then aggregated for larger geographies. We select the county
+with the most overlapping residential addresses for a given ZIP code as
+the ZIP-linked county and sum over the overlapping tracts for each ZIP
+code to obtain ZIP code-level population counts.</p>
+<p>Code reference: <a href="https://github.com/mrp-interface/shinymrp/blob/main/R/fct_data.R#L1403">combine_tracts</a>
+and <a href="https://github.com/mrp-interface/shinymrp/blob/main/dev/scripts/create_data.R#L97">combine_tracts_covid</a></p>
+</div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Geographical columns are optional for general use. The
+app automatically identifies the smallest available geographic scale and
+infers higher levels.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>Geographical columns are optional for general use. The
+app automatically identifies the smallest available geographic scale and
+infers higher levels.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>Geographical columns are optional for general use. The
+app automatically identifies the smallest available geographic scale and
+infers higher levels.<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>For individual-level data, dates are automatically
+converted to time indices but can be provided explicitly. Aggregated
+data must include a <code>time</code> column with time indices.
+Optionally include a <code>date</code> column (first day of each period)
+for visualization. The interface uses time-invariant poststratification
+data.<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>For continuous outcomes, name your outcome column
+<code>outcome</code>.<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>For binary outcomes, the column in individual-level data
+must be <code>positive</code>. For aggregated data, use
+<code>total</code> (number in cell) and <code>positive</code> (number
+positive in cell).<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>For binary outcomes, the column in individual-level data
+must be <code>positive</code>. For aggregated data, use
+<code>total</code> (number in cell) and <code>positive</code> (number
+positive in cell).<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn8"><p>Survey weights must be in a column named
+<code>weight</code>. If uploaded poststratification data contain
+weights, they’re used to estimate population counts.<a href="#fnref8" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

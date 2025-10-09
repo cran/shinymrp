@@ -1,0 +1,544 @@
+# Test file for MRPWorkflow plotting methods
+# Tests all plotting methods: demo_bars, covar_hist, sample_size_map,
+# outcome_plot, outcome_map, estimate_plot, estimate_map, pp_check
+
+
+test_that("demo_bars works for general data", {
+  skip_on_cran()
+
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+
+  # Test with valid demographic variable
+  for (demo in c("sex", "age", "race")) {
+    p <- workflow$demo_bars(demo)
+    expect_s3_class(p, "ggplot")
+  }
+
+  # Test error handling for invalid demographic variable
+  expect_error(
+    workflow$demo_bars("edu"),
+    "Assertion on 'demo' failed"
+  )
+
+  # Test error handling for invalid demographic variable
+  expect_error(
+    workflow$demo_bars("invalid_demo"),
+    "Assertion on 'demo' failed"
+  )
+
+  # Test file saving functionality
+  expect_save_file(
+    workflow$demo_bars,
+    ext = ".png",
+    demo = "age"
+  )
+})
+
+
+test_that("demo_bars works for polling data", {
+  skip_on_cran()
+
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = "poll",
+      family = "binomial"
+    ),
+    link_geo = "state"
+  )
+
+  # Test with "edu"
+  p <- workflow$demo_bars("edu")
+  expect_s3_class(p, "ggplot")
+})
+
+
+test_that("covar_histworks correctly for COVID data", {
+  skip_on_cran()
+  
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = TRUE,
+      special_case = "covid",
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  
+  # Test with valid covariates
+  for (covar in c("college", "poverty", "employment", "income", "urbanicity", "adi")) {
+    p <- workflow$covar_hist(covar)
+    expect_s3_class(p, "ggplot")
+  }
+  
+  # Test error handling for invalid covariate
+  expect_error(
+    workflow$covar_hist("invalid_covar"),
+    "Assertion on 'covar' failed"
+  )
+
+  # Test file saving functionality
+  expect_save_file(
+    workflow$covar_hist,
+    ext = ".png",
+    covar = "income"
+  )
+})
+
+test_that("covar_hist fails appropriately for non-COVID data", {
+  skip_on_cran()
+
+  # Test error handling for non-COVID data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  
+  expect_error(
+    workflow$covar_hist("college"),
+    "Covariate data is not available. This method is only available for COVID data."
+  )
+})
+
+test_that("sample_size_map works", {
+  skip_on_cran()
+
+  # Linking through ZIP code
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  
+  # Test basic functionality
+  hc <- workflow$sample_size_map()
+  expect_s3_class(hc, "highchart")
+
+  # Linking through state
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = "poll",
+      family = "binomial"
+    ),
+    link_geo = "state"
+  )
+  
+  # Test basic functionality
+  hc <- workflow$sample_size_map()
+  expect_s3_class(hc, "highchart")
+
+  # Test file saving functionality
+  expect_save_file(
+    workflow$sample_size_map,
+    ext = ".html"
+  )
+})
+
+
+# Test outcome_plot method
+test_that("outcome_plot works", {
+  skip_on_cran()
+
+  # For time-varying data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = TRUE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  
+  # Test basic functionality
+  p <- workflow$outcome_plot()
+  expect_s3_class(p, "ggplot")
+
+  # For cross-sectional data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  
+  # Test basic functionality
+  p <- workflow$outcome_plot()
+  expect_s3_class(p, "ggplot")
+
+  # Test file saving functionality
+  expect_save_file(
+    workflow$outcome_plot,
+    ext = ".png"
+  )
+})
+
+# Test outcome_map method
+test_that("outcome_map works", {
+  skip_on_cran()
+
+  # For time-varying data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = TRUE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+
+  # Test basic functionality
+  for (stype in c("max", "min")) {
+    hc <- workflow$outcome_map(summary_type = stype)
+    expect_s3_class(hc, "highchart")
+  }
+
+  # Test error handling for invalid summary_type
+  expect_error(
+    workflow$outcome_map(summary_type = "invalid_type"),
+    "Assertion on 'summary_type' failed"
+  )
+
+  # Test error handling for NULL summary_type
+  expect_error(
+    workflow$outcome_map(summary_type = NULL),
+    "For time-varying data, please specify summary_type"
+  )
+
+
+  # For cross-sectional data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+
+  # Test basic functionality
+  hc <- workflow$outcome_map(summary_type = NULL)
+  expect_s3_class(hc, "highchart")
+
+  # Expect warning when summary_type is correctly specified
+  expect_warning(
+    workflow$outcome_map(summary_type = "max"),
+    "summary_type is only applicable for time-varying data."
+  )
+
+  # Test file saving functionality
+  expect_save_file(
+    workflow$outcome_map,
+    ext = ".html",
+    summary_type = "max"
+  )
+})
+
+# Test pp_check method
+test_that("pp_check works", {
+  skip_on_cran()
+  skip_if_not_installed("cmdstanr")
+
+  # For time-varying data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = TRUE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow)
+
+  capture.output({
+    # Test basic functionality
+    p <- workflow$pp_check(model)
+    expect_s3_class(p, "ggplot")
+  }, type = "message")
+
+  # For cross-sectional data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow)
+  
+  capture.output({
+    # Test basic functionality
+    p <- workflow$pp_check(model)
+    expect_s3_class(p, "ggplot")
+  }, type = "message")
+    
+  # Test file saving functionality
+  expect_save_file(
+    workflow$pp_check,
+    ext = ".png",
+    model = model
+  )
+})
+
+
+test_that("estimate_plot works", {
+  skip_on_cran()
+  skip_if_not_installed("cmdstanr")
+
+  ### For time-varying data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = TRUE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow)
+    
+  capture.output({
+    # Test overall estimates plot
+    p <- workflow$estimate_plot(model)
+    expect_s3_class(p, "ggplot")
+    
+    # Test different intervals
+    p <- workflow$estimate_plot(model, interval = 0.9)
+    expect_s3_class(p, "ggplot")
+
+    p <- workflow$estimate_plot(model, interval = "1sd")
+    expect_s3_class(p, "ggplot")
+
+    # Test show_caption parameter
+    p <- workflow$estimate_plot(model, show_caption = FALSE)
+    expect_s3_class(p, "ggplot")
+
+    # Test demographic group estimates
+    for (group in c("sex", "race", "age")) {
+      p <- workflow$estimate_plot(model, group = group)
+      expect_s3_class(p, "ggplot")
+    }
+  }, type = "message")
+
+  ### For cross-sectional data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow)
+    
+  capture.output({
+    # Test overall estimates plot
+    p <- workflow$estimate_plot(model)
+    expect_s3_class(p, "ggplot")
+    
+    # Test different intervals
+    p <- workflow$estimate_plot(model, interval = 0.9)
+    expect_s3_class(p, "ggplot")
+
+    p <- workflow$estimate_plot(model, interval = "1sd")
+    expect_s3_class(p, "ggplot")
+
+    # Test show_caption parameter
+    p <- workflow$estimate_plot(model, show_caption = FALSE)
+    expect_s3_class(p, "ggplot")
+
+    # Test demographic group estimates
+    for (group in c("sex", "race", "age")) {
+      p <- workflow$estimate_plot(model, group = group)
+      expect_s3_class(p, "ggplot")
+    }
+  }, type = "message")
+    
+  # Test error handling for invalid group
+  expect_error(
+    workflow$estimate_plot(model, group = "invalid_group"),
+    "Assertion on 'group' failed"
+  )
+
+  # Test file saving functionality
+  expect_save_file(
+    workflow$estimate_plot,
+    ext = ".png",
+    model = model,
+    group = NULL,
+    interval = 0.95,
+    show_caption = TRUE
+  )
+})
+
+# Test estimate_map method
+test_that("estimate_map works", {
+  skip_on_cran()
+  skip_if_not_installed("cmdstanr")
+
+  ### For time-varying data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = TRUE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow)
+  
+  # Test basic functionality
+  hc <- workflow$estimate_map(model)
+  expect_s3_class(hc, "highchart")
+  
+  # Test with specific geography
+  hc <- workflow$estimate_map(model, geo = "state")
+  expect_s3_class(hc, "highchart")
+  
+  # Test with time index for time-varying data
+  hc <- workflow$estimate_map(model, time_index = 2)
+  expect_s3_class(hc, "highchart")
+  
+  # Test different intervals
+  hc <- workflow$estimate_map(model, interval = "2sd")
+  expect_s3_class(hc, "highchart")
+
+  ### For cross-sectional data
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow)
+  
+  # Test basic functionality
+  hc <- workflow$estimate_map(model)
+  expect_s3_class(hc, "highchart")
+  
+  # Test with specific geography
+  hc <- workflow$estimate_map(model, geo = "state")
+  expect_s3_class(hc, "highchart")
+  
+  # Test with time index for time-varying data
+  hc <- workflow$estimate_map(model, time_index = 3)
+  expect_s3_class(hc, "highchart")
+  
+  # Test different intervals
+  hc <- workflow$estimate_map(model, interval = "2sd")
+  expect_s3_class(hc, "highchart")
+  
+  # Test file saving functionality
+  expect_save_file(
+    workflow$estimate_map,
+    ext = ".html",
+    model = model,
+    geo = "county",
+    time_index = 1,
+    interval = 0.95
+  )
+})
+
+test_that("methods fail appropriately without preprocessed data", {
+  workflow <- mrp_workflow()
+  
+  # These methods should fail without preprocessing
+  expect_error(
+    workflow$demo_bars("age"),
+    "Data for MRP is not available"
+  )
+  expect_error(
+    workflow$covar_hist("college"),
+    "Data for MRP is not available"
+  )
+  expect_error(
+    workflow$sample_size_map(),
+    "Data for MRP is not available"
+  )
+  expect_error(
+    workflow$outcome_plot(),
+    "Data for MRP is not available"
+  )
+  expect_error(
+    workflow$outcome_map(),
+    "Data for MRP is not available"
+  )
+})
+
+# Test error handling for methods requiring fitted models
+test_that("model-dependent methods fail appropriately without fitted models", {
+  skip_on_cran()
+
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = "zip"
+  )
+  model <- setup_test_model(workflow, fit_model = FALSE)
+
+  expect_error(
+    workflow$pp_check(model),
+    "Model has not been fitted"
+  )
+  expect_error(
+    workflow$estimate_plot(model),
+    "Model has not been fitted"
+  )
+  expect_error(
+    workflow$estimate_map(model),
+    "Model has not been fitted"
+  )
+
+})
+
+test_that("map-generating methods fail without linking geography", {
+  skip_on_cran()
+  skip_if_not_installed("cmdstanr")
+
+  workflow <- setup_test_workflow(
+    metadata = list(
+      is_timevar = FALSE,
+      special_case = NULL,
+      family = "binomial"
+    ),
+    link_geo = NULL
+  )
+
+  model <- setup_test_model(workflow)
+
+  expect_error(
+    workflow$sample_size_map(),
+    "Linking geography is not available"
+  )
+
+  expect_error(
+    workflow$outcome_map(),
+    "Linking geography is not available"
+  )
+
+  expect_error(
+    workflow$estimate_map(model),
+    "Linking geography is not available"
+  )
+})

@@ -1,0 +1,307 @@
+test_that(".waiter_ui works", {
+  # Valid types return tagList with 2 element
+  for (type in .const()$ui$loading_types) {
+    golem::expect_shinytaglist(.waiter_ui(type))
+  }
+
+  expect_error(
+    .waiter_ui("invalid"),
+    "Assertion on 'loading_type' failed"
+  )
+})
+
+test_that(".create_guide works", {
+  for (section in .const()$ui$guide_sections) {
+    golem::expect_shinytag(.create_guide(section))
+  }
+
+  expect_error(
+    .create_guide("invalid"),
+    "Assertion on 'open' failed"
+  )
+})
+
+test_that(".create_model_tab works", {
+  skip_on_cran()
+
+  golem::expect_shinytag(
+    .create_model_tab(
+      ns = function(id) id,
+      model = example_model(),
+      last_tab_id = NULL
+    )
+  )
+})
+
+test_that(".est_map_ui works", {
+  skip_on_cran()
+  
+  # County map with slider
+  golem::expect_shinytaglist(
+    .est_map_ui(
+      ns = function(id) id,
+      model = example_model(is_timevar = TRUE),
+      geo_scale = "county",
+      geo_view = "map"
+    )
+  )
+
+  # County map without slider
+  golem::expect_shinytaglist(
+    .est_map_ui(
+      ns = function(id) id,
+      model = example_model(is_timevar = FALSE),
+      geo_scale = "county",
+      geo_view = "map"
+    )
+  )
+
+  # State map with slider
+  golem::expect_shinytaglist(
+    .est_map_ui(
+      ns = function(id) id,
+      model = example_model(is_timevar = TRUE),
+      geo_scale = "state",
+      geo_view = "map"
+    )
+  )
+
+  # State map without slider
+  golem::expect_shinytaglist(
+    .est_map_ui(
+      ns = function(id) id,
+      model = example_model(is_timevar = FALSE),
+      geo_scale = "state",
+      geo_view = "map"
+    )
+  )
+
+  # Error for invalid geo_scale
+  expect_error(
+    .est_map_ui(
+      ns = function(id) id,
+      model = example_model(is_timevar = FALSE),
+      geo_scale = "invalid",
+      geo_view = "map"
+    ),
+    "Assertion on 'geo_scale' failed"
+  )
+
+  # Error for invalid geo_view
+  expect_error(
+    .est_map_ui(
+      ns = function(id) id,
+      model = example_model(is_timevar = FALSE),
+      geo_scale = "state",
+      geo_view = "invalid"
+    ),
+    "Assertion on 'geo_view' failed"
+  )
+})
+
+test_that(".plot_height works", {
+  expect_equal(.plot_height(n = 3, is_timevar = TRUE), 900)
+  expect_equal(.plot_height(n = 3, is_timevar = FALSE), 550)
+  expect_equal(.plot_height(n = 1, is_timevar = TRUE), 550)
+  expect_equal(.plot_height(n = 1, is_timevar = FALSE), 550)
+})
+
+
+test_that(".vis_cat_select works", {
+  # Test general case with linking geography
+  expect_setequal(
+    .vis_cat_select(
+      metadata = list(
+        special_case = NULL,
+        is_timevar = TRUE,
+        family = "binomial"
+      ),
+      linkdata = list(link_geo = "zip")
+    ),
+    c("indiv", "geo", "outcome")
+  )
+
+  # Test time-varying data w/out linking geography
+  expect_setequal(
+    .vis_cat_select(
+      metadata = list(
+        special_case = NULL,
+        is_timevar = TRUE,
+        family = "binomial"
+      ),
+      linkdata = list(link_geo = NULL)
+    ),
+    c("indiv", "outcome")
+  )
+
+  # Test cross-sectional data w/ linking geography
+  expect_setequal(
+    .vis_cat_select(
+      metadata = list(
+        special_case = NULL,
+        is_timevar = FALSE,
+        family = "binomial"
+      ),
+      linkdata = list(link_geo = NULL)
+    ),
+    c("indiv")
+  )
+
+})
+
+test_that(".vis_subcat_select works", {
+  ### COVID data
+  md_covid <- list(special_case = "covid", is_timevar = TRUE)
+  ld_covid <- list(link_geo = "zip")
+
+  # Test individual characteristics
+  out <- .vis_subcat_select("indiv", md_covid, ld_covid)
+  expect_equal(out$label, "2. Select characteristic")
+  expect_setequal(out$choices, c("sex", "race", "age"))  
+
+  # Test geographic characteristics (covariates
+  # available for zip-level data)
+  out <- .vis_subcat_select("geo", md_covid, ld_covid)
+  expect_equal(out$label, "2. Select characteristic")
+  expect_setequal(
+    out$choices,
+    c("sample", "college", "poverty",
+      "employment", "income", "urbanicity", "adi")
+  )
+
+  # Test outcome
+  out <- .vis_subcat_select("outcome", md_covid, ld_covid)
+  expect_equal(out$label, "2. Select plot type")
+  expect_setequal(out$choices, c("overall", "by_geo"))
+
+  ### Polling data
+  md_poll <- list(special_case = "poll", is_timevar = FALSE)
+  ld_poll <- list(link_geo = "state")
+
+  # Test individual characteristics
+  out <- .vis_subcat_select("indiv", md_poll, ld_poll)
+  expect_setequal(out$choices, c("sex", "race", "age", "edu"))  
+
+  # Test geographic characteristics
+  out <- .vis_subcat_select("geo", md_poll, ld_poll)
+  expect_setequal(out$choices, c("sample"))
+
+  # Test outcome (only by_geo available for cross-sectional data)
+  out <- .vis_subcat_select("outcome", md_poll, ld_poll)
+  expect_setequal(out$choices, c("by_geo"))
+
+  ### Test without linking geography
+  ld_no_geo <- list(link_geo = NULL)
+
+  # Test time-varying data
+  md_no_geo <- list(special_case = NULL, is_timevar = TRUE)
+
+  out <- .vis_subcat_select("geo", md_no_geo, ld_no_geo)
+  expect_setequal(out$choices, character(0))
+
+  out <- .vis_subcat_select("outcome", md_no_geo, ld_no_geo)
+  expect_setequal(out$choices, c("overall"))
+
+  # Test cross-sectional data
+  md_no_geo <- list(special_case = NULL, is_timevar = FALSE)
+
+  out <- .vis_subcat_select("outcome", md_no_geo, ld_no_geo)
+  expect_setequal(out$choices, character(0))
+
+  # Test invalid category
+  out <- .vis_subcat_select("invalid", md_covid, ld_covid)
+  expect_equal(out$label, character(0))
+  expect_null(out$choices)
+
+})
+
+test_that(".vis_ui works", {
+  ns <- function(id) id
+
+  # Individual characteristics
+  for (demo in .const()$vars$demo) {
+    golem::expect_shinytag(
+      .vis_ui(ns, "indiv", demo)
+    )
+  }
+
+  # Geographic characteristics
+  for (covar in c("sample", .const()$vars$covar)) {
+    golem::expect_shinytag(
+      .vis_ui(ns, "geo", covar)
+    )
+  }
+
+  # Outcome measure
+  golem::expect_shinytag(
+    .vis_ui(ns, "outcome", "overall")
+  )
+  golem::expect_shinytaglist(
+    .vis_ui(ns, "outcome", "by_geo")
+  )
+
+  # Invalid category
+  expect_error(
+    .vis_ui(ns, "invalid", "overall"),
+    "Assertion on 'category' failed"
+  )
+
+  # Invalid subcategory
+  expect_error(
+    .vis_ui(ns, "indiv", "invalid"),
+    "Assertion on 'subcategory' failed"
+  ) 
+})
+
+test_that(".preview_table works", {
+  df <- data.frame(
+    a = rnorm(10),
+    b = runif(10),
+    outcome = rbinom(10, 1, 0.5),
+    positive = rbinom(10, 10, 0.5)
+  )
+
+  tbl <- .preview_table(df)
+  expect_s3_class(tbl, "datatables")
+  expect_equal(
+    nrow(tbl$x$data),
+    min(nrow(df), .const()$ui$preview_size)
+  )
+})
+
+
+test_that(".link_select works", {
+  # Test if options for linking geography reflect data
+
+  data <- data.frame(
+    zip = character(0),
+    county = character(0),
+    state = character(0)
+  )
+  period_regex <- "^[0-9]{4}-[0-9]{4}$"
+
+  # COVID data
+  choices_covid <- .link_select(data, "covid")
+  expect_setequal(
+    choices_covid$link_geos,
+    c("zip")
+  )
+  expect_true(all(grepl(period_regex, choices_covid$acs_years)))
+
+  # Poll data
+  choices_poll <- .link_select(data, "poll")
+  expect_setequal(
+    choices_poll$link_geos,
+    c("state")
+  )
+  expect_true(all(grepl(period_regex, choices_poll$acs_years)))
+
+  # General data
+  choices_gnr <- .link_select(data)
+  expect_setequal(
+    choices_gnr$link_geos,
+    c("zip", "county", "state", "Do not include geography")
+  )
+  expect_true(all(grepl(period_regex, choices_gnr$acs_years)))
+
+})
