@@ -30,8 +30,8 @@ knitr::opts_template$set(
 #   "data/timevarying_binomial_prep.csv",
 #   show_col_types = FALSE
 # )
-# workflow <- qs::qread("data/workflow.qs")
-# model1 <- qs::qread("data/model.qs")
+# workflow <- qs2::qs_read("data/workflow.qs2")
+# model1 <- qs2::qs_read("data/model.qs2")
 # compare_df <- readr::read_csv(
 #   "data/loo.csv",
 #   show_col_types = FALSE
@@ -150,10 +150,10 @@ workflow$compare_models(model1, model2)
 # compare_df
 
 ## ----save_model, eval=FALSE---------------------------------------------------
-# model1$save(file = "model1.qs")
+# model1$save(file = "model1.qs2")
 # 
 # # load back into workspace
-# model1 <- qs::qread("model1.qs")
+# model1 <- qs2::qs_read("model1.qs2")
 
 ## ----estimate_plot, opts.label="tall_plot", fig.width=13, fig.height=14-------
 workflow$estimate_plot(model1, group = "sex", interval = 0.95)

@@ -595,10 +595,10 @@ knitr::opts_chunk$set(
 # example_model <- example_model()
 # 
 # # Save model to file
-# example_model$save("model.qs")
+# example_model$save("model.qs2")
 # 
 # # Load model later
-# loaded_model <- qs::qread("model.qs")
+# loaded_model <- qs2::qs_read("model.qs2")
 
 ## -----------------------------------------------------------------------------
 # library(shinymrp)
