@@ -46,10 +46,10 @@ sample_data <- readr::read_csv(
   "data/timevarying_binomial_prep.csv",
   show_col_types = FALSE
 )
-workflow <- qs2::qs_read("data/workflow.qs2")
-model1 <- qs2::qs_read("data/model.qs2")
+workflow <- qs2::qs_read("data/workflow/workflow.qs2")
+model1 <- qs2::qs_read("data/workflow/model.qs2")
 compare_df <- readr::read_csv(
-  "data/loo.csv",
+  "data/workflow/loo.csv",
   show_col_types = FALSE
 )
 ```
@@ -176,6 +176,8 @@ Use `$create_model()` to specify the model, including the mean structure (fixed 
 - `normal(mu, sigma)`
 - `student_t(nu, mu, sigma)`
 - `structured` (see [Si et al., 2020](https://www150.statcan.gc.ca/n1/en/pub/12-001-x/2020002/article/00003-eng.pdf?st=iF1_Fbrh))
+- `icar` (see [Besag et al., 1991](https://link.springer.com/article/10.1007/BF00116466))
+- `bym2` (see [Riebler et al., 2016](https://pubmed.ncbi.nlm.nih.gov/27566770/))
 
 Default priors are used if `""` (empty string) is supplied:
 

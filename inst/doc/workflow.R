@@ -30,10 +30,10 @@ knitr::opts_template$set(
 #   "data/timevarying_binomial_prep.csv",
 #   show_col_types = FALSE
 # )
-# workflow <- qs2::qs_read("data/workflow.qs2")
-# model1 <- qs2::qs_read("data/model.qs2")
+# workflow <- qs2::qs_read("data/workflow/workflow.qs2")
+# model1 <- qs2::qs_read("data/workflow/model.qs2")
 # compare_df <- readr::read_csv(
-#   "data/loo.csv",
+#   "data/workflow/loo.csv",
 #   show_col_types = FALSE
 # )
 

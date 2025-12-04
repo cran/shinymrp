@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Toan Tran, Alex Ziyu Jiang, Yajuan Si" />
+
+
+<title>Spatial prior specification in shinymrp</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Spatial prior specification in
+shinymrp</h1>
+<h4 class="author">Toan Tran, Alex Ziyu Jiang, Yajuan Si</h4>
+
+
+
+<p>To account for spatial correlation between geographic measures, the
+interface implements two widely used versions of the Conditional
+Autoregressive (CAR) models as prior specifications within the Bayesian
+hierarchical models:</p>
+<ol style="list-style-type: decimal">
+<li>Intrinsic CAR (<strong>ICAR</strong>): An intrinsic (improper)
+Gaussian Markov random field that smooths geospatial estimates by
+penalizing differences between neighbors.</li>
+<li>Besag-York-Mollié-2 (<strong>BYM2</strong>): A reparameterization of
+the BYM model that combines a structured ICAR component with a spatially
+independent component and incorporates scaling to standardize
+interpretation across multiple graphs.</li>
+</ol>
+<p>This vignette provides a brief description of the spatial priors and
+corresponding Stan code. We also include the case study applying the
+BYM2 prior to a hierarchical model for COVID-19 infection
+estimation.</p>
+<div id="areal-data-neighborhood-graph" class="section level2">
+<h2>1. Areal data &amp; neighborhood graph</h2>
+<p>These models specifically apply to <em>areal data</em>, which consist
+of a single aggregated measure for each areal unit or region. In spatial
+modeling, the primary interest lies in the <strong>relationships between
+units</strong> rather than in the units themselves. Common approaches to
+defining these relationships include <strong>rook</strong> and
+<strong>queen contiguity</strong>, which identify two areal units as
+neighbors if they share a border (or a vertex). We use the
+<code>spdep</code> package to construct neighborhood graphs from areal
+units. For ZIP codes, <strong>ZCTAs</strong> (ZIP Code Tabulation Areas)
+are used as proxies to infer the adjacency structure. A common
+mathematical representation of this structure is via the
+<strong>adjacency matrix</strong>, denoted <span class="math inline">\(\mathbf{W}\)</span>. Because the edges are
+undirected, <span class="math inline">\(\mathbf{W}\)</span> is a
+symmetric <span class="math inline">\(N \times N\)</span> matrix for a
+set of <span class="math inline">\(N\)</span> areal units. This
+representation enables mathematical operations that yield valuable
+insights into the neighborhood graph.</p>
+<p>The <strong>connectivity</strong> of the graph can affect the choice
+of spatial models. For instance, the ICAR prior requires a connected
+graph. A <strong>connected</strong> graph contains a single
+<strong>component</strong>, meaning that each node can be reached from
+any other node. In contrast, a graph with multiple components is
+<strong>disconnected</strong>, as nodes in one component cannot reach
+those in another. A component of size one is referred to as an
+<strong>island</strong> (or <strong>isolate</strong>). Since the
+structured component of a spatial model relies on neighborhood edges for
+smoothing, these isolates require special handling.</p>
+</div>
+<div id="intrinsic-conditional-auto-regressive-icar-models" class="section level2">
+<h2>2. Intrinsic Conditional Auto-Regressive (ICAR) models</h2>
+<p>The <strong>ICAR model</strong> is a special case of a Gaussian
+Markov random field (GMRF), known as the intrinsic GMRF. Let <span class="math inline">\(\pmb{\phi} = \left(\phi_1, \ldots,
+\phi_N\right)^{\top}\)</span> denote the spatial random effects
+associated with the <span class="math inline">\(N\)</span> neighboring
+regions. Assuming that spatial dependence is fully captured by the
+neighborhood structure in <span class="math inline">\(\mathbf{W}\)</span>, the ICAR model assumes that
+each <span class="math inline">\(\phi_i\)</span> is conditionally
+distributed based its neighboring values <span class="math inline">\(\phi_{-i}\)</span>: <span class="math display">\[
+(\phi_i \mid \phi_{-i}) \sim {N}\!\left(
+  \frac{\sum_j w_{ij}\phi_j}{\sum_j w_{ij}},
+  \frac{1}{\tau \sum_j w_{ij}}
+\right),
+\]</span> where <span class="math inline">\(w_{ij} &gt; 0\)</span> if
+nodes <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are neighbors and <span class="math inline">\(w_{ij} = 0\)</span> otherwise, and <span class="math inline">\(\tau\)</span> represents the precision. Thus, the
+joint density can be written as</p>
+<p><span class="math display">\[ p(\pmb{\phi} \mid \tau ) \propto
+\tau^{\frac{N-1}{2}}\exp \left(-\frac{\tau}{2} \pmb{\phi}^{\top}
+\mathbf{L} \pmb{\phi}\right), \]</span></p>
+<p>where <span class="math inline">\(\mathbf{L} = \mathbf{D} -
+\mathbf{W}\)</span> is the <strong>graph Laplacian matrix</strong>,
+constructed from the adjacency matrix <span class="math inline">\(\mathbf{W}\)</span> and the degree matrix <span class="math inline">\(\mathbf{D}\)</span>, where <span class="math inline">\(\mathbf{D} = \text{diag}(d_i)\)</span> with <span class="math inline">\(d_i = \sum_j w_{ij}\)</span>. Note that <span class="math inline">\(\mathbf{L}\)</span> satisfies <span class="math inline">\(\mathbf{L} \mathbf{1}=\mathbf{0}\)</span>, and is
+positive semidefinite but not invertible. Expanding the quadratic form,
+we can express the log-probability density in terms of pairwise
+differences between neighboring pairs:</p>
+<p><span class="math display">\[ \log p(\pmb{\phi}) = -\frac{\tau}{2}
+\sum_{i \sim j} w_{ij} (\phi_i - \phi_j)^2 + \text{const.},
+\]</span></p>
+<p>where <span class="math inline">\({i \sim j}\)</span> means that
+<span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are neighbors. The joint density is
+improper but characterizes local conditional relationships among
+neighboring sites, penaling large differences between neighbors and thus
+encouraging local smoothness. The precision parameter <span class="math inline">\(\tau\)</span> controls the degree of smoothness
+captured by the ICAR component. This formulation explicitly shows how
+the neighborhood structure is incorporated into the joint probability.
+It also reveals the <strong>unidentifiability problem</strong> of the
+ICAR model, because adding a constant to all elements of <span class="math inline">\(\pmb{\phi}\)</span> does not change the
+differences. To resolve this, a <strong>sum-to-zero constraint</strong>
+is imposed: <span class="math display">\[ \sum_{i=1}^{N} \phi_i = 0.
+\]</span> This constraint also prevents <span class="math inline">\(\pmb{\phi}\)</span> from confounding the model
+intercept.</p>
+<div id="stan-implementation" class="section level3">
+<h3>2.1 Stan implementation</h3>
+<p>The implementation in Stan is straightforward with the pairwise
+difference formulation.</p>
+<p>Define the function for computing the log probability density:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="kw">functions</span> { </span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="dt">real</span> icar_normal_lpdf(<span class="dt">vector</span> phi, <span class="dt">array</span>[] <span class="dt">int</span> node1, <span class="dt">array</span>[] <span class="dt">int</span> node2) {</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="cf">return</span> -<span class="fl">0.5</span> * dot_self(phi[node1] - phi[node2]);</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  }</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Pass neighborhood information using edges defined by node
+indices:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span> = <span class="dv">0</span>&gt; N;  <span class="co">// number of areal regions</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span> = <span class="dv">0</span>&gt; N_edges;  <span class="co">// number of neighbor pairs</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="dt">array</span>[N_edges] <span class="dt">int</span>&lt;<span class="kw">lower</span> = <span class="dv">1</span>, <span class="kw">upper</span> = N&gt; node1; <span class="co">// neighbor pairs: node1[i] adjacent to node2[i]</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="dt">array</span>[N_edges] <span class="dt">int</span>&lt;<span class="kw">lower</span> = <span class="dv">1</span>, <span class="kw">upper</span> = N&gt; node2;</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Constrain <span class="math inline">\(\phi\)</span> using Stan’s
+<code>sum_to_zero_vector</code> definition:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  sum_to_zero_vector[N] phi; <span class="co">// structured spatial random effects</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Specify the joint probability density:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  phi ~ icar_normal(node1, node2);</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  ...</span></code></pre></div>
+</div>
+</div>
+<div id="bym2-model" class="section level2">
+<h2>3. BYM2 model</h2>
+<p>While the ICAR prior imposes spatial dependence, it can be overly
+restrictive in practice. By construction, all variation in <span class="math inline">\(\pmb{\phi}\)</span> is spatially structured, so
+independent region-specific deviations are absorbed into the smooth
+surface. In many real data applications, however, some variability is
+spatially uncorrelated (e.g., due to measurement error or
+region-specific effects). To address this, the Besag–York–Mollié (BYM)
+model augments the ICAR component with an unstructured random effect
+that captures independent noise. The BYM2 reparameterization (Riebler et
+al., 2016) refines this approach by standardizing the ICAR term and
+separating overall scale from the spatial structure. In effect, the
+precision parameter <span class="math inline">\(\tau\)</span> from the
+ICAR model is replaced by a fixed scaling constant derived from the
+neighborhood graph, ensuring that the total variance and spatial
+proportion parameters remain interpretable and comparable across
+datasets.</p>
+<p>In the BYM2 formulation, the ICAR precision matrix is rescaled by
+<span class="math inline">\(s\)</span>, computed from the graph
+Laplacian <span class="math inline">\(\mathbf{L}\)</span> as</p>
+<p><span class="math display">\[
+s =
+\operatorname{mean}\!\big[\mathrm{diag}(\mathbf{L}^{-}_{\text{pseudo}})\big],
+\]</span></p>
+<p>where <span class="math inline">\(\mathbf{L}^{-}_{\text{pseudo}}\)</span> denotes
+the Moore–Penrose inverse of the Laplacian. This ensures that the scaled
+ICAR component <span class="math inline">\(\pmb{\phi}^\ast =
+s^{-1/2}\pmb{\phi}\)</span> has unit marginal variance under the graph
+structure, i.e., <span class="math inline">\(\operatorname{Var}(\phi_i^\ast) = 1\)</span>.</p>
+<p>The spatial random effect for region <span class="math inline">\(i\)</span> is then modeled as</p>
+<p><span class="math display">\[
+a_i = \sigma\,b_i
+= \sigma\!\left(
+  \sqrt{\rho}\,\phi_i^\ast
+  + \sqrt{1-\rho}\,\theta_i
+\right) = \sigma\!\left(
+  \sqrt{\frac{\rho}{s}}\,\phi_i
+  + \sqrt{1-\rho}\,\theta_i
+\right),
+\qquad i = 1, \dots, N,
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(\phi_i^\ast\)</span> is the
+<em>scaled</em> ICAR component, standardized such that <span class="math inline">\(\operatorname{Var}(\phi_i^\ast) = 1\)</span>;</li>
+<li><span class="math inline">\(\theta_i \sim \mathbf{N}(0,1)\)</span>
+is the unstructured (independent) term;</li>
+<li><span class="math inline">\(\sigma &gt; 0\)</span> is the overall
+standard deviation controlling total variability; and</li>
+<li><span class="math inline">\(\rho \in [0,1]\)</span> controls the
+proportion of variation attributed to the structured (ICAR)
+component.</li>
+</ul>
+<p>This formulation removes the precision parameter <span class="math inline">\(\tau\)</span> from the model by absorbing it into
+the scaling of the ICAR component. As a result, the parameters <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\rho\)</span> have clear and interpretable
+meanings: <span class="math inline">\(\sigma\)</span> represents the
+total spatial variability, and <span class="math inline">\(\rho\)</span>
+quantifies how much variability is explained by the spatial
+structure.</p>
+<div id="bym2-reparameterization-for-disconnected-graphs" class="section level3">
+<h3>3.1 BYM2 reparameterization for disconnected graphs</h3>
+<p>The standard BYM2 model assumes that the spatial graph is
+<strong>connected</strong>, meaning every areal unit can be reached from
+any other through a path of neighboring edges. When the adjacency graph
+has <strong>multiple connected components</strong>, the Laplacian matrix
+<span class="math inline">\(\mathbf{L}\)</span> becomes block-diagonal,
+and the ICAR prior exhibits one degree of freedom (a zero eigenvalue)
+<strong>per component</strong>. Consequently, the BYM2 formulation must
+be extended to handle these multiple components. To make the
+implementation of this extension easier, we reparameterize, at the
+component level, the structured ICAR field on a basis that (i) lies in
+each component’s sum-to-zero subspace and (ii) is BYM2-standardized.
+Isolates receive only the spatially independent part.</p>
+<p>Recall that <span class="math inline">\(W\)</span> is the symmetric
+adjacency, <span class="math inline">\(D=\mathrm{diag}(d_i)\)</span> is
+the degree matrix, and <span class="math inline">\(L=D-W\)</span> is the
+graph Laplacian. Because the graph is connected, <span class="math inline">\(L\mathbf 1=0\)</span> and <span class="math inline">\(\mathrm{null}(L)=\mathrm{span}\{\mathbf
+1\}\)</span>. The ICAR prior is improper on <span class="math inline">\(\mathbb R^N\)</span> but becomes proper on the
+sum-to-zero subspace <span class="math display">\[
+\mathbf H=\{\phi\in\mathbb R^N:\mathbf 1^\top \phi=0\}.
+\]</span> Since <span class="math inline">\(L\)</span> is symmetric and
+positive semidefinite, diagonalize <span class="math inline">\(L=U\Lambda U^\top\)</span>, where the eigenvalues
+satisfy <span class="math inline">\(0=\lambda_1&lt;\lambda_2\le\cdots\le\lambda_N\)</span>,
+with <span class="math inline">\(u_1\propto \mathbf 1\)</span>. Write
+<span class="math inline">\(U_+=[u_2,\ldots,u_N]\in\mathbb
+R^{N\times(N-1)}\)</span> and <span class="math inline">\(\Lambda_+=\mathrm{diag}(\lambda_2,\ldots,\lambda_N)\)</span>.
+The Moore–Penrose pseudo inverse is <span class="math display">\[
+L^{-}=U_+\Lambda_+^{-1}U_+^\top,
+\]</span> which equals the covariance of the ICAR prior restricted to
+<span class="math inline">\(\mathbf H\)</span>.</p>
+<p>Define the basis <span class="math display">\[
+R \;=\; U_+\,\Lambda_+^{-1/2}\in\mathbb R^{N\times(N-1)},\qquad \eta
+\sim \mathbf N(0,I_{N-1}),\qquad \phi \;=\; R\,\eta.
+\]</span> This reparameterization is equivalent to the constrained ICAR
+in the following sense. First, the support matches because each column
+of <span class="math inline">\(R\)</span> is orthogonal to <span class="math inline">\(\mathbf 1\)</span>, hence <span class="math inline">\(\mathbf 1^\top\phi=\mathbf 1^\top R\eta=0\)</span>
+for all <span class="math inline">\(\eta\)</span>, i.e., <span class="math inline">\(\phi\in\mathbf H\)</span>. Second, the mean
+matches since <span class="math inline">\(\mathbb E[\phi]=R\,\mathbb
+E[\eta]=0\)</span>. Third, the covariance matches because <span class="math display">\[
+\mathrm{Var}(\phi) \;=\; R\,\mathrm{Var}(\eta)\,R^\top \;=\; R R^\top
+\;=\; U_+\Lambda_+^{-1}U_+^\top \;=\; L^{-}.
+\]</span> Linear images of a multivariate normal are normal; therefore
+<span class="math inline">\(\phi\stackrel{d}{=}\mathbf
+N(0,L^{-})\)</span> on <span class="math inline">\(\mathbf H\)</span>.
+Right-orthogonal rotations of the scores, <span class="math inline">\(R\mapsto RQ\)</span> with <span class="math inline">\(Q\)</span> orthogonal, leave <span class="math inline">\(R R^\top\)</span> unchanged; the parameterization
+is not unique but the induced law for <span class="math inline">\(\phi\)</span> is.</p>
+<p>BYM2 standardization rescales the structured field so that the
+geometric mean (GM) of its marginal variances equals one. Let <span class="math inline">\(v_i=(L^{-})_{ii}\)</span> and define <span class="math display">\[
+s \;=\; \exp\Big(\tfrac{1}{N}\sum_{i=1}^N \log v_i\Big),\qquad
+R_{\text{BYM2}} \;=\; \frac{1}{\sqrt{s}}\,R,\qquad \tilde\phi \;=\;
+R_{\text{BYM2}}\,\eta.
+\]</span> Then <span class="math inline">\(\mathrm{GM}\big(\operatorname{diag}\mathrm{Var}(\tilde\phi)\big)=1\)</span>,
+while <span class="math inline">\(\mathbf 1^\top \tilde\phi=0\)</span>
+still holds because the subspace is unchanged.</p>
+</div>
+<div id="stan-implementation-for-both-connected-and-disconnected-graphs" class="section level3">
+<h3>3.2 Stan implementation for both connected and disconnected
+graphs</h3>
+<p>The reparameterization allows a clean implementation as the
+reduced-rank ICAR basis is already BYM2-standardized and enforces the
+sum-to-zero constraint by construction. The sum_to_zero vector is not
+longer needed that can improve sampling.</p>
+<p>Pass the scaled reduced-rank ICAR basis:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; N;  <span class="co">// number of areal regions</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; N_pos; <span class="co">//number of positive eigenvalues</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="dt">matrix</span>[N_zip, N_pos] R; <span class="co">// scaled so that geometric mean of</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>                          <span class="co">// marginal variance is 1</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Define parameters:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma; <span class="co">// overall standard deviation for spatial effect</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>, <span class="kw">upper</span>=<span class="dv">1</span>&gt; rho; <span class="co">// mixing parameter </span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="dt">vector</span>[N] theta; <span class="co">// unstructured spatial random effect</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="dt">vector</span>[N] eta; <span class="co">// structured reduced-rank scores</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Compute the scaled ICAR component and combined spatial effect:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>transformed_parameters {</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="dt">vector</span>[N] phi = R * eta;</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="dt">vector</span>[N] b = sqrt(rho) * phi + sqrt(<span class="dv">1</span> - rho) * theta;</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="dt">vector</span>[N] a = sigma * b</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Assigning priors:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode stan"><code class="sourceCode stan"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  theta ~ std_normal();</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  phi ~ icar_normal(node1, node2);</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  rho ~ uniform(<span class="dv">0</span>, <span class="dv">1</span>); <span class="co">//can be ignored since this is the default prior</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  sigma ~ normal(<span class="dv">0</span>, <span class="dv">3</span>);</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  ...</span></code></pre></div>
+</div>
+</div>
+<div id="case-study-covid-infection-estimation" class="section level2">
+<h2>4. Case study: COVID infection estimation</h2>
+<p>One common application of the BYM2 model is infectious disease
+surveillance. Here, we fit a multilevel regression model to a dataset
+containing COVID-19 test records from a Midwest hospital. This dataset
+includes over 120,000 test records from patients residing in more than
+1,000 ZIP codes, with most records from Michigan and more than a quarter
+of the ZIP codes having five or fewer test records.</p>
+<!-- ```{r, echo=FALSE, out.width="100%"} -->
+<!-- knitr::include_graphics("./figures/sample_size_map.png") -->
+<!-- ``` -->
+<p>Let the test result for individual <span class="math inline">\(i\)</span> be <span class="math inline">\(y_i\)</span>, where <span class="math inline">\(y_i=1\)</span> indicates a positive result and
+<span class="math inline">\(y_i=0\)</span> indicates negative. We obtain
+aggregated counts as the number of tests <span class="math inline">\(n_j\)</span> and the number of positive cases
+<span class="math inline">\(y^*_j\)</span> in cell <span class="math inline">\(j\)</span>. Let <span class="math inline">\(p_j=\textrm{Pr}(y_{j[i]}=1)\)</span> be the
+probability that person <span class="math inline">\(i\)</span> in cell
+<span class="math inline">\(j\)</span> tests positive. We account for
+the PCR testing sensitivity and specificity, where the positivity <span class="math inline">\(p_j\)</span> is a function of the test sensitivity
+<span class="math inline">\(\delta\)</span>, specificity <span class="math inline">\(\gamma\)</span>, and the true incidence <span class="math inline">\(\pi_j\)</span> for people in cell <span class="math inline">\(j\)</span>:</p>
+<p><span class="math display">\[\begin{align}
+\label{positivity}
+p_j=(1-\gamma)(1-\pi_j )+\delta \pi_j.
+\end{align}\]</span></p>
+<p>We fit a binomial model for <span class="math inline">\(y^*_j\)</span>, <span class="math inline">\(y^*_j
+\sim \textrm{binomial}(n_j, p_j)\)</span> with a logistic regression for
+<span class="math inline">\(\pi_j\)</span> with covariates—sex, age,
+race, ZIP codes, and time in weeks—to allow time-varying incidence in
+the multilevel model. <span class="math display">\[\begin{align}
+\label{pi}
+\textrm{logit}(\pi_j)=\beta_1+\beta_2{\rm male}_j+\alpha_{{\rm
+a}[j]}^{\rm age}+\alpha_{{\rm r}[j]}^{\rm race}+\alpha_{{\rm s}[j]}^{\rm
+ZIP}+\alpha_{{\rm t}[j]}^{\rm time},
+\end{align}\]</span> where <span class="math inline">\({\rm
+male}_j\)</span> is an indicator for men; <span class="math inline">\({\rm a}[j]\)</span>, <span class="math inline">\({\rm r}[j]\)</span>, and <span class="math inline">\({\rm s}[j]\)</span> represent age, race, and ZIP
+levels; and <span class="math inline">\({\rm t}[j]\)</span> denotes the
+time in weeks when the test result is collected for cell <span class="math inline">\(j\)</span>.</p>
+<p>We assign the hierarchical priors to the varying intercepts: <span class="math display">\[\begin{align}
+\nonumber &amp;\alpha^{\rm age} \sim \mbox{normal}(0,\sigma^{\rm age} ),
+\,\,\, \sigma^{\rm age}\sim \mbox{normal}_+ (0,3)\\
+&amp;\alpha^{\rm race} \sim \mbox{normal}(0,\sigma^{\rm race} ), \,\,\,
+\sigma^{\rm race}\sim \mbox{normal}_+ (0,3).\\
+&amp;\alpha_{\rm s}^{\rm ZIP} \sim BYM2,
+\end{align}\]</span> where <span class="math inline">\(\alpha_{\rm
+s}^{\rm ZIP}\)</span> is the combined spatial effect (i.e., <span class="math inline">\(a\)</span>) defined in the BYM2 model section.</p>
+<p>The model specification using <code>shinymrp</code> is as follows.
+See the reference page for parameter descriptions.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">library</span>(shinymrp)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co"># Initialize workflow</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>workflow <span class="ot">&lt;-</span> <span class="fu">mrp_workflow</span>()</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co"># Preprocess sample data</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># ...</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co"># Construct poststratification table</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># ...</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co"># Create a new model object</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>model <span class="ot">&lt;-</span> workflow<span class="sc">$</span><span class="fu">create_model</span>(</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">intercept_prior =</span> <span class="st">&quot;normal(0, 5)&quot;</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  <span class="at">fixed =</span> <span class="fu">list</span>(</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>    <span class="at">sex =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>    <span class="at">urbanicity =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>    <span class="at">college =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>    <span class="at">employment =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>    <span class="at">poverty =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>    <span class="at">income =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>    <span class="at">adi =</span> <span class="st">&quot;normal(0, 3)&quot;</span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>  ),</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>  <span class="at">varying =</span> <span class="fu">list</span>(</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>    <span class="at">race =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>    <span class="at">age =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>    <span class="at">time =</span> <span class="st">&quot;normal(0, 3)&quot;</span>,</span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>    <span class="at">zip =</span> <span class="st">&quot;bym2&quot;</span></span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  ),</span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>  <span class="at">sens =</span> <span class="fl">0.7</span>,</span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>  <span class="at">spec =</span> <span class="fl">0.999</span></span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>)</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a><span class="co"># Run MCMC</span></span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>model<span class="sc">$</span><span class="fu">fit</span>(</span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>  <span class="at">n_iter =</span> <span class="dv">4000</span>,</span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>  <span class="at">n_chains =</span> <span class="dv">4</span>,</span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>  <span class="at">adapt_delta =</span> <span class="fl">0.95</span></span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>Besag, J. (1974). Spatial interaction and the statistical analysis
+of lattice systems. Journal of the Royal Statistical Society: Series B
+(Methodological), 36(2), 192-225.</li>
+<li>Riebler, A., Sørbye, S. H., Simpson, D., &amp; Rue, H. (2016). An
+intuitive Bayesian spatial model for disease mapping that accounts for
+scaling. Statistical methods in medical research, 25(4), 1145-1165.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
